@@ -1,9 +1,13 @@
 import jester, asyncdispatch, asyncnet, strutils, sequtils
 
-const clientFiles = staticExec("ls ../dist")
+# TODO: Determine language from extension
+# TODO: expose route for updating file
+
+const clientDir = "../build/dist"
+const clientFiles = staticExec("ls " & clientDir)
                         .split(Whitespace)
                         .mapIt("/" & it)
-                        .mapIt((it, staticRead("../dist" & it)))
+                        .mapIt((it, staticRead(clientDir & it)))
 
 
 proc serveFile(path: string): int =

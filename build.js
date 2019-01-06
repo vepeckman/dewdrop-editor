@@ -5,7 +5,7 @@ const entryFiles = Path.join(__dirname, './client/index.html');
 
 // Bundler options
 const options = {
-  outDir: './dist', // The out directory to put the build files in, defaults to dist
+  outDir: './build/dist', // The out directory to put the build files in, defaults to dist
   outFile: 'index.html', // The name of the outputFile
   publicUrl: './', // The url to serve on, defaults to dist
   watch: false,
