@@ -117,4 +117,4 @@ let editor = monaco.editor.create(document.getElementById('container'), {
 });
 
 let savebtn = document.getElementById("savebtn");
-savebtn.onclick = () => console.log(editor.getModel().getValue())
+savebtn.onclick = () => fetch("/api/save", {method: "POST", body: editor.getModel().getValue()})
