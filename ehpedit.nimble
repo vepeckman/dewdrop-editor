@@ -16,27 +16,25 @@ requires "cligen 0.9.18"
 
 proc folderSetup() =
   mkdir("./build")
-  mkdir("./build/css")
-  mkdir("./build/dist")
-  mkdir("./build/bin")
+  mkdir("./build/client")
+  mkdir("./build/server")
 
 proc client() =
   folderSetup()
-  exec "./node_modules/.bin/tailwind build client/tailwind/styles.css -c client/tailwind/tailwind.js > build/css/styles.css"
-  exec "node build.js"
+  exec "./node_modules/.bin/parcel build client/index.html --no-source-maps -d build/client"
 
-proc bin() =
+proc server() =
   folderSetup()
-  if not existsFile("./build/dist/index.html"):
+  if not existsFile("./build/client/index.html"):
     client()
-  exec "nim c -o:build/bin/ehpedit src/ehpedit.nim"
+  exec "nim c -o:build/server/ehpedit src/ehpedit.nim"
 
 task client, "Builds client code":
   client()
 
-task bin, "Builds the binary":
-  bin()
+task server, "Builds the server":
+  server()
 
 task all, "Builds the project":
   client()
-  bin()
+  server()

@@ -1,10 +1,12 @@
 import jester, asyncdispatch, asyncnet, strutils, sequtils, streams
 
-const clientDir = "../build/dist"
+const clientDir = "../build/client"
 const clientFiles = staticExec("ls " & clientDir)
                         .split(Whitespace)
-                        .mapIt("/" & it)
-                        .mapIt((it, staticRead(clientDir & it)))
+                        .mapIt((it, staticRead(clientDir & "/" & it)))
+
+var fileText = ""
+var fileLang = ""
 
 proc determineLanguage(path: string): string =
     let fileParts = path.split('.')
@@ -19,36 +21,33 @@ proc saveFile(file, text: string) =
     var fileStream = openFileStream(file, fmWrite)
     fileStream.write(text)
     fileStream.close()
+    fileText = text
 
-proc handleApi(request: Request, file: string): string =
-    case request.pathInfo
-    of "/api/save":
-        saveFile(file, request.body)
-        result = ""
-
-proc handleFile(request: Request, fileText, fileLang: string): string =
+proc clientFile(clientFileName, fileText, fileLang: string): string =
     result = ""
     for clientFile in clientFiles:
-        if clientFile[0] == request.pathInfo:
+        if clientFile[0] == clientFileName:
             result = clientFile[1]
                 .replace("\"EHPEDIT_TEXT_VALUE\"", "`" & fileText & "`")
                 .replace("EHPEDIT_LANG_VALUE", fileLang)
 
 proc serveFile(port = 8080, file: string): int =
-    var fileText = readFile(file)
-    var fileLang = determineLanguage(file)
-
-    proc match(request: Request): Future[ResponseData] {.async.} =
-        block route:
-            if request.pathInfo.startsWith("/api"):
-                resp handleApi(request, file)
-            else:
-                resp handleFile(request, fileText, fileLang)
+    fileText = readFile(file)
+    fileLang = determineLanguage(file)
 
     settings:
         port = Port(port)
 
-    var server = initJester(match, settings)
+    routes:
+        post "/api/save":
+            saveFile(file, request.body)
+            resp ""
+
+        get "/@clientFile":
+            echo @"clientFile"
+            resp clientFile(@"clientFile", fileText, fileLang)
+
+    var server = initJester(settings)
     server.serve()
 
 when isMainModule:

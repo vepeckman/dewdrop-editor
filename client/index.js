@@ -1,4 +1,4 @@
-import '../build/css/styles.css';
+import './styles.pcss';
 
 // (1) Desired editor features:
 import 'monaco-editor/esm/vs/editor/browser/controller/coreCommands.js';

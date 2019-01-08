@@ -9,7 +9,9 @@
   "author": "Nicolas Peckman",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "monaco-editor": "^0.15.6"
+    "autoprefixer": "^9.4.4",
+    "monaco-editor": "^0.15.6",
+    "postcss-modules": "^1.4.1"
   },
   "devDependencies": {
     "parcel-bundler": "^1.11.0",
