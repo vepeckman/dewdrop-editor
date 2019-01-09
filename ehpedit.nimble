@@ -21,7 +21,7 @@ proc folderSetup() =
 
 proc client() =
   folderSetup()
-  exec "./node_modules/.bin/parcel build client/index.html --no-source-maps -d build/client"
+  exec "./node_modules/.bin/parcel build client/index.html --no-source-maps -d build/client --public-url ./client"
 
 proc server() =
   folderSetup()

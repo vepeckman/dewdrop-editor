@@ -1,4 +1,4 @@
-import jester, asyncdispatch, asyncnet, strutils, sequtils, streams
+import jester, asyncdispatch, asyncnet, strutils, sequtils, streams, json
 
 const clientDir = "../build/client"
 const clientFiles = staticExec("ls " & clientDir)
@@ -23,13 +23,11 @@ proc saveFile(file, text: string) =
     fileStream.close()
     fileText = text
 
-proc clientFile(clientFileName, fileText, fileLang: string): string =
+proc clientFile(clientFileName: string): string =
     result = ""
     for clientFile in clientFiles:
         if clientFile[0] == clientFileName:
             result = clientFile[1]
-                .replace("\"EHPEDIT_TEXT_VALUE\"", "`" & fileText & "`")
-                .replace("EHPEDIT_LANG_VALUE", fileLang)
 
 proc serveFile(port = 8080, file: string): int =
     fileText = readFile(file)
@@ -39,13 +37,22 @@ proc serveFile(port = 8080, file: string): int =
         port = Port(port)
 
     routes:
-        post "/api/save":
-            saveFile(file, request.body)
-            resp ""
+      get "/api/file/@fileName/text":
+        let data = %* {
+          "text": fileText,
+          "lang": fileLang
+        }
+        resp data
 
-        get "/@clientFile":
-            echo @"clientFile"
-            resp clientFile(@"clientFile", fileText, fileLang)
+      put "/api/file/@fileName/text":
+        saveFile(file, request.body)
+        resp ""
+
+      get "/client/@clientFile":
+        resp clientFile(@"clientFile")
+
+      get "/index.html":
+        resp clientFile("index.html")
 
     var server = initJester(settings)
     server.serve()

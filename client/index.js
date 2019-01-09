@@ -91,30 +91,35 @@ import 'monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js';
 import 'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution';
 import 'monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution';
 
+fetch("/api/file/test.js/text")
+    .then(resp => resp.json())
+    .then(fileData => {
+        
+        self.MonacoEnvironment = {
+            getWorker: function (moduleId, label) {
+                if (label === 'json') {
+                    return new Worker('../node_modules/monaco-editor/esm/vs/language/json/json.worker.js')
+                }
+                if (label === 'css') {
+                    return new Worker('../node_modules/monaco-editor/esm/vs/language/css/css.worker.js')
+                }
+                if (label === 'html') {
+                    return new Worker('../node_modules/monaco-editor/esm/vs/language/html/html.worker.js')
+                }
+                if (label === 'typescript' || label === 'javascript') {
+                    return new Worker('../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js')
+                }
+                return new Worker('../node_modules/monaco-editor/esm/vs/editor/editor.worker.js')
+            }
+        }
 
+        let editor = monaco.editor.create(document.getElementById('container'), {
+            value: fileData.text,
+            language: fileData.lang
+        });
 
-self.MonacoEnvironment = {
-	getWorker: function (moduleId, label) {
-		if (label === 'json') {
-			return new Worker('../node_modules/monaco-editor/esm/vs/language/json/json.worker.js')
-		}
-		if (label === 'css') {
-			return new Worker('../node_modules/monaco-editor/esm/vs/language/css/css.worker.js')
-		}
-		if (label === 'html') {
-			return new Worker('../node_modules/monaco-editor/esm/vs/language/html/html.worker.js')
-		}
-		if (label === 'typescript' || label === 'javascript') {
-			return new Worker('../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js')
-		}
-		return new Worker('../node_modules/monaco-editor/esm/vs/editor/editor.worker.js')
-	}
-}
+        let savebtn = document.getElementById("savebtn");
+        savebtn.onclick = () => fetch("/api/file/test.js/text", {method: "PUT", body: editor.getModel().getValue()})
 
-let editor = monaco.editor.create(document.getElementById('container'), {
-	value: "EHPEDIT_TEXT_VALUE",
-	language: "EHPEDIT_LANG_VALUE"
-});
+    })
 
-let savebtn = document.getElementById("savebtn");
-savebtn.onclick = () => fetch("/api/save", {method: "POST", body: editor.getModel().getValue()})
