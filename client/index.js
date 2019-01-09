@@ -50,7 +50,9 @@ import 'monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js';
 import 'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution';
 import 'monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution';
 
-fetch("/api/file/test.js/text")
+const fileApi = "/api/file" + location.pathname + "/text";
+
+fetch(fileApi)
     .then(resp => resp.json())
     .then(fileData => {
         
@@ -78,6 +80,6 @@ fetch("/api/file/test.js/text")
         });
 
         let savebtn = document.getElementById("savebtn");
-        savebtn.onclick = () => fetch("/api/file/test.js/text", {method: "PUT", body: editor.getModel().getValue()})
+        savebtn.onclick = () => fetch(fileApi, {method: "PUT", body: editor.getModel().getValue()})
 
     });

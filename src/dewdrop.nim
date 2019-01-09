@@ -1,12 +1,15 @@
 import jester, asyncdispatch, asyncnet, strutils, sequtils, streams, json
 
+type 
+  FileData = ref object
+    path, uri, text, lang: string
+
 const clientDir = "../build/client"
 const clientFiles = staticExec("ls " & clientDir)
                         .split(Whitespace)
                         .mapIt((it, staticRead(clientDir & "/" & it)))
 
-var fileText = ""
-var fileLang = ""
+var files: seq[FileData]
 
 proc determineLanguage(path: string): string =
     let fileParts = path.split('.')
@@ -17,11 +20,19 @@ proc determineLanguage(path: string): string =
     of "yaml": "yaml"
     else: ""
 
-proc saveFile(file, text: string) =
-    var fileStream = openFileStream(file, fmWrite)
+proc newFileData(path: string): FileData =
+  FileData(
+    text: readFile(path),
+    lang: determineLanguage(path),
+    path: path,
+    uri: path.replace('/', '.')
+  )
+
+proc saveFile(file: FileData, text: string) =
+    var fileStream = openFileStream(file.path, fmWrite)
     fileStream.write(text)
     fileStream.close()
-    fileText = text
+    file.text = text
 
 proc clientFile(clientFileName: string): string =
     result = ""
@@ -29,33 +40,42 @@ proc clientFile(clientFileName: string): string =
         if clientFile[0] == clientFileName:
             result = clientFile[1]
 
-proc serveFile(port = 8080, file: string): int =
-    fileText = readFile(file)
-    fileLang = determineLanguage(file)
+proc serveFile(port = 8080, filenames: seq[string]): int =
+  if filenames.len < 1:
+    echo "Dewdrop requires one or more files"
+    return 0
 
-    settings:
-        port = Port(port)
+  files = filenames.mapIt(newFileData(it))
 
-    routes:
-      get "/api/file/@fileName/text":
-        let data = %* {
-          "text": fileText,
-          "lang": fileLang
-        }
-        resp data
+  settings:
+      port = Port(port)
 
-      put "/api/file/@fileName/text":
-        saveFile(file, request.body)
-        resp ""
+  routes:
+    get "/api/file/@fileUri/text":
+      let matchingFiles = files.filterIt(it.uri == @"fileUri")
+      cond matchingFiles.len > 0
+      let file = matchingFiles[0]
+      let data = %* {
+        "text": file.text,
+        "lang": file.lang
+      }
+      resp data
 
-      get "/client/@clientFile":
-        resp clientFile(@"clientFile")
+    put "/api/file/@fileUri/text":
+      let matchingFiles = files.filterIt(it.uri == @"fileUri")
+      cond matchingFiles.len > 0
+      let file = matchingFiles[0]
+      saveFile(file, request.body)
+      resp ""
 
-      get "/index.html":
-        resp clientFile("index.html")
+    get "/client/@clientFile":
+      resp clientFile(@"clientFile")
 
-    var server = initJester(settings)
-    server.serve()
+    get "/@fileUri":
+      resp clientFile("index.html")
+
+  var server = initJester(settings)
+  server.serve()
 
 when isMainModule:
     import cligen
