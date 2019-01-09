@@ -5,7 +5,7 @@ author        = "nepeckman"
 description   = "A serving file editor"
 license       = "AGPL-3.0-or-later"
 srcDir        = "src"
-bin           = @["ehpedit"]
+bin           = @["dewdrop"]
 
 
 # Dependencies
@@ -27,7 +27,7 @@ proc server() =
   folderSetup()
   if not existsFile("./build/client/index.html"):
     client()
-  exec "nim c -o:build/server/ehpedit src/ehpedit.nim"
+  exec "nim c -o:build/server/dewdrop src/dewdrop.nim"
 
 task client, "Builds client code":
   client()
