@@ -13,6 +13,7 @@ bin           = @["dew"]
 requires "nim >= 0.19.9"
 requires "jester 0.4.1"
 requires "cligen 0.9.18"
+requires "karax 1.0.0"
 
 proc folderSetup() =
   mkdir("./build")
@@ -27,7 +28,7 @@ proc server() =
   folderSetup()
   if not existsFile("./build/client/index.html"):
     client()
-  exec "nim c -o:build/server/dew src/dewdrop.nim"
+  exec "nimble c -o:build/server/dew src/dewdrop.nim"
 
 task client, "Builds client code":
   client()
