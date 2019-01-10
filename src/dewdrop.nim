@@ -1,8 +1,8 @@
-import jester, asyncdispatch, asyncnet, strutils, sequtils, streams, json
+import jester, asyncdispatch, asyncnet, strutils, sequtils, streams, json, sugar
 
 type 
   FileData = ref object
-    path, uri, text, lang: string
+    path, id, text, lang: string
 
 const clientDir = "../build/client"
 const clientFiles = staticExec("ls " & clientDir)
@@ -25,7 +25,7 @@ proc newFileData(path: string): FileData =
     text: readFile(path),
     lang: determineLanguage(path),
     path: path,
-    uri: path.replace('/', '.')
+    id: path.replace('/', '.')
   )
 
 proc saveFile(file: FileData, text: string) =
@@ -51,8 +51,19 @@ proc serveFile(port = 8080, filenames: seq[string]): int =
       port = Port(port)
 
   routes:
-    get "/api/file/@fileUri/text":
-      let matchingFiles = files.filterIt(it.uri == @"fileUri")
+    get "/api/files":
+      var data = newJArray()
+      for file in files:
+        let fileJson = %* {
+          "lang": file.lang,
+          "text": file.text,
+          "id": file.id
+        }
+        data.add(fileJson)
+      resp data
+
+    get "/api/files/@id/text":
+      let matchingFiles = files.filterIt(it.id == @"id")
       cond matchingFiles.len > 0
       let file = matchingFiles[0]
       let data = %* {
@@ -61,8 +72,8 @@ proc serveFile(port = 8080, filenames: seq[string]): int =
       }
       resp data
 
-    put "/api/file/@fileUri/text":
-      let matchingFiles = files.filterIt(it.uri == @"fileUri")
+    put "/api/files/@id/text":
+      let matchingFiles = files.filterIt(it.id == @"id")
       cond matchingFiles.len > 0
       let file = matchingFiles[0]
       saveFile(file, request.body)
@@ -71,7 +82,7 @@ proc serveFile(port = 8080, filenames: seq[string]): int =
     get "/client/@clientFile":
       resp clientFile(@"clientFile")
 
-    get "/@fileUri":
+    get "/@id":
       resp clientFile("index.html")
 
   var server = initJester(settings)
