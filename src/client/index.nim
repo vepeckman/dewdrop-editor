@@ -1,4 +1,4 @@
-import sugar
+import sugar, strformat
 import jsffi except `&`
 import karax/[vstyles, jdict]
 include karax / prelude
@@ -12,6 +12,11 @@ let editor = require("./editor.js")
 let fileApi = cstring("/api/files") & to(location.pathname, cstring) & cstring("/text");
 
 
+proc buttonComponent(txt: string, id = "", color = "blue", onclick: (Event, VNode) -> void = (e: Event, n: VNode) => nil): VNode =
+  result = buildHtml():
+    button(id=id, class=fmt"bg-{color} hover:bg-{color}-dark text-white font-bold py-2 px-4 rounded mx-6 my-6"):
+      text txt
+
 proc render(): VNode =
   var styles = newJSeq[cstring](4)
   styles.add(cstring("height"))
@@ -20,8 +25,7 @@ proc render(): VNode =
   styles.add(cstring("1px solid #ccc"))
   result = buildHtml(tdiv):
     tdiv(style=styles, class="mx-6 mt-6 w-3/5", id="container")
-    button(id="savebtn", class="bg-blue hover:bg-blue-dark text-white font-bold py-2 px-4 rounded mx-6 my-6"):
-      text "Save"
+    buttonComponent("Save", id = "savebtn", color = "green")
 
 proc postRender() =
   echo "After render"
