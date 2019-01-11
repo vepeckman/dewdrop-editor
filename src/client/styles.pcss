@@ -60,3 +60,35 @@
  * @import "utilities/background-patterns";
  * @import "utilities/skew-transforms";
  */
+ #root {
+    display: grid;
+    grid-template-rows: 55px 50% 1fr 40px; 
+    grid-template-columns: 1fr 4fr;
+ }
+
+ #header {
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 1;
+ }
+
+ #file-container {
+    grid-column-start: 1;
+    grid-row-start: 2;
+ }
+
+ #editor-container {
+    grid-column-start: 2;
+    grid-row-start: 2;
+ }
+
+ #lower-control-panel {
+    grid-column-start: 2;
+    grid-row-start: 3;
+ }
+
+ #footer {
+    grid-column-start: 1;
+    grid-column-end: 3;
+    grid-row-start: 4;
+ }

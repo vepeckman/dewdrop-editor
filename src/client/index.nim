@@ -19,13 +19,20 @@ proc buttonComponent(txt: string, id = "", color = "blue", onclick: (Event, VNod
 
 proc render(): VNode =
   var styles = newJSeq[cstring](4)
-  styles.add(cstring("height"))
-  styles.add(cstring("600px"))
+  styles.add(cstring("min-height"))
+  styles.add(cstring("500px"))
   styles.add(cstring("border"))
   styles.add(cstring("1px solid #ccc"))
   result = buildHtml(tdiv):
-    tdiv(style=styles, class="mx-6 mt-6 w-3/5", id="container")
-    buttonComponent("Save", id = "savebtn", color = "green")
+    tdiv(id="header"):
+      text "Dewdrop"
+    tdiv(id="file-container"):
+      text "Files"
+    tdiv(style=styles, class="mx-6", id="editor-container")
+    tdiv(id="lower-control-panel", class="flex"):
+      buttonComponent("Save", id = "savebtn", color = "green")
+    tdiv(id="footer"):
+      text "Made by me"
 
 proc postRender() =
   echo "After render"
