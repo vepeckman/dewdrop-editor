@@ -10,10 +10,13 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "autoprefixer": "^9.4.4",
+    "babel-polyfill": "^6.26.0",
     "monaco-editor": "^0.15.6",
     "postcss-modules": "^1.4.1"
   },
   "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
     "parcel-bundler": "^1.11.0",
     "parcel-plugin-nim": "1.0.0",
     "tailwindcss": "^0.7.3"

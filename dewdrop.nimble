@@ -19,23 +19,35 @@ proc folderSetup() =
   mkdir("./build")
   mkdir("./build/client")
   mkdir("./build/server")
+  exec "chmod o+r ./build/client"
 
-proc client() =
+proc devClient() =
   folderSetup()
   exec "./node_modules/.bin/parcel build src/client/index.html --no-source-maps -d build/client --public-url ./client"
 
-proc server() =
+proc devServer() =
   folderSetup()
   if not existsFile("./build/client/index.html"):
-    client()
+    devClient()
   exec "nimble c -o:build/server/dew src/dewdrop.nim"
 
-task client, "Builds client code":
-  client()
+proc prodServer() =
+  folderSetup()
+  devClient()
+  exec "nimble c -o:build/server/dew -d:release src/dewdrop.nim"
 
-task server, "Builds the server":
-  server()
+task devClient, "Builds client code":
+  devClient()
 
-task all, "Builds the project":
-  client()
-  server()
+task devServer, "Builds the server":
+  devServer()
+
+task dev, "Builds the project":
+  devClient()
+  devServer()
+
+task prod, "Builds the project":
+  prodServer()
+
+task clean, "Remove build folder":
+  exec "rm -rf ./build"

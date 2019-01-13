@@ -1,44 +1,20 @@
-import jester, asyncdispatch, asyncnet, strutils, sequtils, streams, json, sugar
+import jester, asyncdispatch, asyncnet, sequtils, json, sugar, strutils, os
+import common/file
 
-type 
-  FileData = ref object
-    path, id, text, lang: string
-
-const clientDir = "../build/client"
-const clientFiles = staticExec("ls " & clientDir)
-                        .split(Whitespace)
-                        .mapIt((it, staticRead(clientDir & "/" & it)))
+when defined(release):
+  const clientDir = "../build/client"
+  const clientFiles = staticExec("ls " & clientDir)
+                          .split(Whitespace)
+                          .mapIt((it, staticRead(clientDir & "/" & it)))
 
 var files: seq[FileData]
 
-proc determineLanguage(path: string): string =
-    let fileParts = path.split('.')
-    let fileExtension = fileParts[fileParts.len - 1]
-    
-    result = case fileExtension
-    of "js": "javascript"
-    of "yaml": "yaml"
-    else: ""
-
-proc newFileData(path: string): FileData =
-  FileData(
-    text: readFile(path),
-    lang: determineLanguage(path),
-    path: path,
-    id: path.replace('/', '.')
-  )
-
-proc saveFile(file: FileData, text: string) =
-    var fileStream = openFileStream(file.path, fmWrite)
-    fileStream.write(text)
-    fileStream.close()
-    file.text = text
-
-proc clientFile(clientFileName: string): string =
-    result = ""
-    for clientFile in clientFiles:
-        if clientFile[0] == clientFileName:
-            result = clientFile[1]
+when defined(release):
+  proc clientFile(clientFileName: string): string =
+      result = ""
+      for clientFile in clientFiles:
+          if clientFile[0] == clientFileName:
+              result = clientFile[1]
 
 proc serveFile(port = 8080, filenames: seq[string]): int =
   if filenames.len < 1:
@@ -47,43 +23,62 @@ proc serveFile(port = 8080, filenames: seq[string]): int =
 
   files = filenames.mapIt(newFileData(it))
 
-  settings:
-      port = Port(port)
+  when not defined(release):
+    settings:
+        port = Port(port)
+        staticDir = getCurrentDir() / "build"
+  else:
+    settings:
+        port = Port(port)
 
-  routes:
-    get "/api/files":
-      var data = newJArray()
-      for file in files:
-        let fileJson = %* {
-          "lang": file.lang,
-          "text": file.text,
-          "id": file.id
-        }
-        data.add(fileJson)
-      resp data
+  when not defined(release):
+    routes:
+      get "/api/files":
+        var data = newJArray()
+        for file in files:
+          data.add(file.metaData.toJs)
+        resp data
 
-    get "/api/files/@id/text":
-      let matchingFiles = files.filterIt(it.id == @"id")
-      cond matchingFiles.len > 0
-      let file = matchingFiles[0]
-      let data = %* {
-        "text": file.text,
-        "lang": file.lang
-      }
-      resp data
+      get "/api/files/@id/text":
+        let matchingFiles = files.filterIt(it.id == @"id")
+        cond matchingFiles.len > 0
+        resp matchingFiles[0].toJs
 
-    put "/api/files/@id/text":
-      let matchingFiles = files.filterIt(it.id == @"id")
-      cond matchingFiles.len > 0
-      let file = matchingFiles[0]
-      saveFile(file, request.body)
-      resp ""
+      put "/api/files/@id/text":
+        let matchingFiles = files.filterIt(it.id == @"id")
+        cond matchingFiles.len > 0
+        let file = matchingFiles[0]
+        saveFile(file, request.body)
+        resp ""
 
-    get "/client/@clientFile":
-      resp clientFile(@"clientFile")
+      get "/":
+        resp readFile("./build/client/index.html")
 
-    get "/@id":
-      resp clientFile("index.html")
+  else:
+    routes:
+      get "/api/files":
+        var data = newJArray()
+        for file in files:
+          data.add(file.metaData.toJs)
+        resp data
+
+      get "/api/files/@id/text":
+        let matchingFiles = files.filterIt(it.id == @"id")
+        cond matchingFiles.len > 0
+        resp matchingFiles[0].toJs
+
+      put "/api/files/@id/text":
+        let matchingFiles = files.filterIt(it.id == @"id")
+        cond matchingFiles.len > 0
+        let file = matchingFiles[0]
+        saveFile(file, request.body)
+        resp ""
+
+      get "/client/@clientFile":
+        resp clientFile(@"clientFile")
+
+      get "/":
+        resp clientFile("index.html")
 
   var server = initJester(settings)
   server.serve()
