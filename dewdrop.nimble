@@ -51,3 +51,6 @@ task prod, "Builds the project":
 
 task clean, "Remove build folder":
   exec "rm -rf ./build"
+
+task run, "Run dewdrop":
+  exec "./build/server/dew testfiles/test.js"
