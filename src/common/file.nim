@@ -34,6 +34,13 @@ when defined(js):
   proc toFileMetaDataSeq*(data: JsObject): seq[FileMetaData] =
     for it in data.items:
       result.add(toFileMetaData(it))
+
+  proc toFileData*(data: JsObject): FileData =
+    FileData(
+      text: to(data.text, kstring),
+      lang: to(data.lang, kstring),
+      metaData: toFileMetaData(data))
+
 else:
   proc toJs*(data: FileMetaData): JsonNode =
     result = %* {
