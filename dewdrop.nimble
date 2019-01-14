@@ -23,9 +23,11 @@ proc folderSetup() =
 
 proc devClient() =
   folderSetup()
+  exec "touch src/client/main.nim"
   exec "./node_modules/.bin/parcel build src/client/index.html --no-source-maps -d build/client --public-url ./client"
 
 proc devServer() =
+  exec "rm -rf ./build"
   folderSetup()
   if not existsFile("./build/client/index.html"):
     devClient()

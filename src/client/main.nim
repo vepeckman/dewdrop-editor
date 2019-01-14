@@ -11,15 +11,18 @@ let babelPolyfill = require("babel-polyfill")
 proc buttonComponent(txt: string, id = "", color = "blue", onclick: (Event, VNode) -> void = (e: Event, n: VNode) => nil): VNode =
   result = buildHtml():
     button(id=id, class=fmt"bg-{color} hover:bg-{color}-dark text-white font-bold py-2 px-4 rounded mx-6 my-6"):
+      proc onClick(ev: Event, n: VNode) = saveCurrentFile()
       text txt
 
 
 proc fileListComponent(): VNode =
-  result = buildHtml(tdiv):
-    for file in MetaDataStore:
-      a(href = "/#"):
-        proc onClick(ev: Event, n: VNode) = updateFileData(file)
-        text file.path
+  result = buildHtml():
+    tdiv(class = "pl-6 flex flex-col"):
+      text "Files:"
+      for file in MetaDataStore:
+        a(href = "/#", class = "text-blue hover:text-blue-dark pl-4 py-4"):
+          proc onClick(ev: Event, n: VNode) = updateFileData(file)
+          text file.path
 
 proc render(): VNode =
   var styles = newJSeq[cstring](4)

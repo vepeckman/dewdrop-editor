@@ -3,6 +3,7 @@ import karax/karax
 import ../common/file, fetch, editor
 
 var MetaDataStore*: seq[FileMetaData]
+var CurrentFile: FileData
 
 proc getFiles*(): Future[seq[FileMetaData]]  =
   fetch(cstring("/api/files"))
@@ -15,6 +16,14 @@ proc getFile*(id: cstring): Future[FileData] =
     .then((resp: JsObject) => resp.json())
     .then((data: JsObject) => toFileData(data))
 
+proc saveFile*(file: FileData): Future[void] =
+  let fileUri = cstring("/api/files/") & file.id & cstring("/text");
+  var options = newJsObject()
+  options.`method` = cstring("PUT")
+  options.body = monaco.getEditorText()
+  fetch(fileUri, options)
+    .then((resp: JsObject) => echo "ok")
+
 proc updateMetaData*() {. async, discardable .} =
   let files = await getFiles()
   MetaDataStore = files
@@ -24,5 +33,8 @@ proc updateMetaData*() {. async, discardable .} =
 proc updateFileData*(metaData: FileMetaData) {. async, discardable .} =
   let file = await getFile(metaData.id)
   monaco.updateEditor(file)
+  CurrentFile = file
+
+proc saveCurrentFile*(): Future[void] {. discardable .} = saveFile(CurrentFile)
 
 updateMetaData()

@@ -76,3 +76,7 @@ export function updateEditor(fileData) {
     editor.getModel().setValue(fileData.text);
     monaco.editor.setModelLanguage(editor.getModel(), fileData.lang);
 }
+
+export function getEditorText() {
+    return editor.getModel().getValue();
+}
