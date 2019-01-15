@@ -15,13 +15,20 @@ proc buttonComponent(txt: string, id = "", color = "blue", onclick: (Event, VNod
       text txt
 
 
+proc fileSelector(file: FileMetaData): proc (ev: Event, n: VNode) =
+  # Needed because the reference to "file" in the karax dsl
+  # isn't a closure. 
+  proc onClick(ev: Event, n: VNode) = 
+    echo file.path
+    updateFileData(file)
+  result = onClick
+
 proc fileListComponent(): VNode =
   result = buildHtml():
     tdiv(class = "pl-6 flex flex-col"):
       text "Files:"
       for file in MetaDataStore:
-        a(href = "/#", class = "text-blue hover:text-blue-dark pl-4 py-4"):
-          proc onClick(ev: Event, n: VNode) = updateFileData(file)
+        a(href = "/#", class = "text-blue hover:text-blue-dark pl-4 py-4", onclick = fileSelector(file)):
           text file.path
 
 proc render(): VNode =
