@@ -7,6 +7,7 @@ var console {.nodecl, importc.}: JsObject
 
 let babelPolyfill = require("babel-polyfill")
 
+let svg = require("./dewdrop.svg")
 
 proc buttonComponent(txt: string, id = "", color = "blue", onclick: (Event, VNode) -> void = (e: Event, n: VNode) => nil): VNode =
   result = buildHtml():
@@ -25,7 +26,7 @@ proc fileSelector(file: FileMetaData): proc (ev: Event, n: VNode) =
 
 proc fileListComponent(): VNode =
   result = buildHtml():
-    tdiv(class = "pl-6 flex flex-col"):
+    tdiv(class = "pl-6 flex flex-col font-sans"):
       text "Files:"
       for file in MetaDataStore:
         a(href = "/#", class = "text-blue hover:text-blue-dark pl-4 py-4", onclick = fileSelector(file)):
@@ -38,17 +39,21 @@ proc render(): VNode =
   styles.add(cstring("border"))
   styles.add(cstring("1px solid #ccc"))
   result = buildHtml(tdiv):
-    tdiv(id="header"):
-      text "Dewdrop"
+    tdiv(id="header", class="flex flex-row pt-2"):
+      tdiv(class="font-cursive text-4xl pl-6"):
+        text "Dewdrop"
+      tdiv(class="w-8 h-8"):
+        img(src = svg.to(cstring))
     tdiv(id="file-container"):
       fileListComponent()
     tdiv(id="editor-container", style=styles, class="mx-6")
     tdiv(id="lower-control-panel", class="flex"):
       buttonComponent("Save", id = "savebtn", color = "green")
-    tdiv(id="footer"):
-      text "Made by me"
+    tdiv(id="footer", class="flex pl-6 items-end font-sans"):
+      tdiv():
+        text ""
   
 setRenderer(render, cstring("root"))
 setForeignNodeId(cstring("editor-container"))
 kxi.redrawSync()
-monaco.setupEditor()
+Editor.setupEditor()

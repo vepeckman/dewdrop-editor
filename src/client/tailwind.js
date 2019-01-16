@@ -175,6 +175,10 @@ module.exports = {
       'Courier New',
       'monospace',
     ],
+    'cursive': [
+        'Coiny',
+        'cursive'
+    ]
   },
 
 

@@ -20,7 +20,7 @@ proc saveFile*(file: FileData): Future[void] =
   let fileUri = cstring("/api/files/") & file.id & cstring("/text");
   var options = newJsObject()
   options.`method` = cstring("PUT")
-  options.body = monaco.getEditorText()
+  options.body = Editor.getEditorText()
   fetch(fileUri, options)
     .then((resp: JsObject) => echo "ok")
 
@@ -32,7 +32,7 @@ proc updateMetaData*() {. async, discardable .} =
 
 proc updateFileData*(metaData: FileMetaData) {. async, discardable .} =
   let file = await getFile(metaData.id)
-  monaco.updateEditor(file)
+  Editor.updateEditor(file)
   CurrentFile = file
 
 proc saveCurrentFile*(): Future[void] {. discardable .} = saveFile(CurrentFile)
