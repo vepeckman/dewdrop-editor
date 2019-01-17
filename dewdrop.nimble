@@ -16,7 +16,7 @@ requires "cligen 0.9.18"
 requires "karax 1.0.0"
 
 let parcelProd = "./node_modules/.bin/parcel build src/client/index.html --no-source-maps -d build/client --public-url ./client"
-let parcelDev = "./node_modules/.bin/parcel watch src/client/index.html -d build/client --public-url ./client"
+let parcelDev = "./node_modules/.bin/parcel watch src/client/index.html --no-source-maps -d build/client --public-url ./client"
 
 proc folderSetup() =
   mkdir("./build")
