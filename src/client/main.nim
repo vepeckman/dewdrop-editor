@@ -1,13 +1,11 @@
 import sugar, strformat, asyncjs
 import jsffi except `&`
-import ../common/file, api, editor
+import ../common/file, api, editor, svg
 import karax / [kbase, vdom, kdom, vstyles, karax, karaxdsl, jdict, jstrutils, jjson, reactive]
 
 var console {.nodecl, importc.}: JsObject
 
 let babelPolyfill = require("babel-polyfill")
-
-let svg = require("./dewdrop.svg")
 
 proc buttonComponent(txt: string, id = "", color = "blue", onclick: (Event, VNode) -> void = (e: Event, n: VNode) => nil): VNode =
   result = buildHtml():
@@ -43,7 +41,7 @@ proc render(): VNode =
       tdiv(class="font-cursive text-4xl pl-6"):
         text "Dewdrop"
       tdiv(class="w-8 h-8"):
-        img(src = svg.to(cstring))
+        img(src = dropSvg)
     tdiv(id="file-container"):
       fileListComponent()
     tdiv(id="editor-container", style=styles, class="mx-6")
