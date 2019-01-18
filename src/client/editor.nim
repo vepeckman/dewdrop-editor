@@ -1,4 +1,4 @@
-import jsffi
+import jsffi, dom
 import karax/kbase
 import ../common/file
 {. emit: """
@@ -51,43 +51,29 @@ import 'monaco-editor/esm/vs/basic-languages/xml/xml.contribution.js';
 import 'monaco-editor/esm/vs/basic-languages/yaml/yaml.contribution.js';
 import 'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution';
 import 'monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution';
-
-let editor;
-
-function setupEditor() {
-    self.MonacoEnvironment = {
-        getWorker: function (moduleId, label) {
-            if (label === 'json') {
-                return new Worker('../../node_modules/monaco-editor/esm/vs/language/json/json.worker.js')
-            }
-            if (label === 'css') {
-                return new Worker('../../node_modules/monaco-editor/esm/vs/language/css/css.worker.js')
-            }
-            if (label === 'html') {
-                return new Worker('../../node_modules/monaco-editor/esm/vs/language/html/html.worker.js')
-            }
-            if (label === 'typescript' || label === 'javascript') {
-                return new Worker('../../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js')
-            }
-            return new Worker('../../node_modules/monaco-editor/esm/vs/editor/editor.worker.js')
-        }
-    }
-
-    editor = monaco.editor.create(document.getElementById('editor-element'));
-}
-
-function updateEditor(fileData) {
-    editor.getModel().setValue(fileData.text);
-    monaco.editor.setModelLanguage(editor.getModel(), fileData.lang);
-}
-
-function getEditorText() {
-    return editor.getModel().getValue();
-}
 """
 .}
 
+var editor: JsObject
+var monaco {. nodecl, importc .}: JsObject
+var self {. nodecl, importc .}: JsObject
 
-proc setupEditor*() {. importc, nodecl .}
-proc updateEditor*(file: FileData) {. importc, nodecl .}
-proc getEditorText*(): kstring {. importc, nodecl .}
+proc newWorker(path: cstring): JsObject {. nodecl, importcpp: "new Worker(@)" .}
+
+proc getWorker(moduleId: cstring, label: cstring): JsObject =
+  case $label
+  of "json": newWorker(cstring"../../node_modules/monaco-editor/esm/vs/language/json/json.worker.js")
+  of "css": newWorker(cstring"../../node_modules/monaco-editor/esm/vs/language/css/css.worker.js")
+  of "html": newWorker(cstring"../../node_modules/monaco-editor/esm/vs/language/html/html.worker.js")
+  of "typescript", "javascript": newWorker(cstring"../../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js")
+  else: newWorker(cstring"../../node_modules/monaco-editor/esm/vs/editor/editor.worker.js")
+
+proc setupEditor*() =
+  var env = newJsObject()
+  env["getWorker"] = getWorker
+  editor = monaco.editor.create(document.getElementById(cstring"editor-element"))
+  
+proc updateEditor*(file: FileData) = 
+  editor.getModel().setValue(file.text)
+  monaco.editor.setModelLanguage(editor.getModel(), file.lang)
+proc getEditorText*(): kstring = editor.getModel().getValue().to(kstring)

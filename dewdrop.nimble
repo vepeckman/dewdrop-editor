@@ -5,7 +5,7 @@ author        = "nepeckman"
 description   = "A serving file editor"
 license       = "AGPL-3.0-or-later"
 srcDir        = "src"
-bin           = @["dew"]
+bin           = @["dewdrop"]
 
 
 # Dependencies
@@ -49,6 +49,9 @@ task devServer, "Builds the server":
 task dev, "Builds the project":
   devServer()
   devClient()
+
+task prodServer, "Builds the project":
+  prodServer()
 
 task prod, "Builds the project":
   prodClient()

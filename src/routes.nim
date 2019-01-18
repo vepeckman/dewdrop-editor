@@ -5,7 +5,8 @@ when defined(release):
   const clientDir = "../build/client"
   const clientFiles = staticExec("ls " & clientDir)
                           .split(Whitespace)
-                          .mapIt((it, staticRead(clientDir & "/" & it)))
+                          .filterIt(not it.endsWith(".gz") and it != "report.html")
+                          .mapIt((it, staticRead(clientDir & "/" & it & ".gz")))
 
 when defined(release):
   proc clientFile(clientFileName: string): string =
@@ -60,10 +61,12 @@ template prodRoutes(): untyped =
       resp ""
 
     get "/client/@clientFile":
-      resp clientFile(@"clientFile")
+      var headers = @[("Content-Encoding", "gzip")]
+      resp(Http200, headers, clientFile(@"clientFile"))
 
     get "/":
-      resp clientFile("index.html")
+      var headers = @[("Content-Encoding", "gzip"), ("Content-Type", "text/html; charset=utf-8")]
+      resp(Http200, headers, clientFile("index.html"))
 
 when defined(release):
   template routes*() = prodRoutes

@@ -7,9 +7,9 @@ var console {.nodecl, importc.}: JsObject
 
 let babelPolyfill = require("babel-polyfill")
 
-proc buttonComponent(txt: string, id = "", color = "blue", onclick: (Event, VNode) -> void = (e: Event, n: VNode) => nil): VNode =
+proc buttonComponent(txt: string, id = "", onclick: (Event, VNode) -> void = (e: Event, n: VNode) => nil): VNode =
   result = buildHtml():
-    button(id=id, class=fmt"bg-{color} hover:bg-{color}-dark text-white font-bold py-2 px-4 rounded mx-6 my-6"):
+    button(id=id, class="bg-green hover:bg-green-dark text-white font-bold py-2 px-4 rounded mx-6 my-6"):
       proc onClick(ev: Event, n: VNode) = saveCurrentFile()
       text txt
 
@@ -64,7 +64,7 @@ proc render(): VNode =
       tdiv(id="editor-container"):
         editorComponent()
       tdiv(id="lower-control-panel", class="flex"):
-        buttonComponent("Save", id = "savebtn", color = "green")
+        buttonComponent("Save", id = "savebtn")
   
 setRenderer(render, cstring("root"))
 setForeignNodeId(cstring("editor-element"))
