@@ -14,11 +14,10 @@ proc buttonComponent(txt: string, id = "", color = "blue", onclick: (Event, VNod
       text txt
 
 
-proc fileSelector(file: FileMetaData): proc (ev: Event, n: VNode) =
+proc fileSelector(file: FileData): proc (ev: Event, n: VNode) =
   # Needed because the reference to "file" in the karax dsl
   # isn't a closure. 
   proc onClick(ev: Event, n: VNode) = 
-    echo file.path
     updateFileData(file)
   result = onClick
 
@@ -26,32 +25,48 @@ proc fileListComponent(): VNode =
   result = buildHtml():
     tdiv(class = "pl-6 flex flex-col font-sans"):
       text "Files:"
-      for file in MetaDataStore:
-        a(href = "/#", class = "text-blue hover:text-blue-dark pl-4 py-4", onclick = fileSelector(file)):
-          text file.path
+      for file in FileDataStore:
+        tdiv(class = "pl-4 py-4"):
+          a(
+            href = "/#",
+            class = "text-blue hover:text-blue-dark" & (if file == CurrentFile: " italic font-bold" else: ""),
+            onclick = fileSelector(file)):
+            text file.path
 
-proc render(): VNode =
+proc fileChange() =
+  CurrentFile.unsavedChanges = true
+
+proc editorComponent(): VNode =
   var styles = newJSeq[cstring](4)
   styles.add(cstring("min-height"))
   styles.add(cstring("500px"))
   styles.add(cstring("border"))
   styles.add(cstring("1px solid #ccc"))
-  result = buildHtml(tdiv):
-    tdiv(id="header", class="flex flex-row pt-2"):
-      tdiv(class="font-cursive text-4xl pl-6"):
-        text "Dewdrop"
-      tdiv(class="w-8 h-8"):
-        img(src = dropSvg)
-    tdiv(id="file-container"):
-      fileListComponent()
-    tdiv(id="editor-container", style=styles, class="mx-6")
-    tdiv(id="lower-control-panel", class="flex"):
-      buttonComponent("Save", id = "savebtn", color = "green")
-    tdiv(id="footer", class="flex pl-6 items-end font-sans"):
-      tdiv():
-        text ""
+  result = buildHtml():
+    tdiv(class = "mx-6", onkeydown = fileChange):
+      tdiv(class = "mb-2"):
+        text CurrentFile.path
+        if CurrentFile.unsavedChanges:
+          text "    (*)"
+      tdiv(id="editor-element", style=styles)
+
+
+proc render(): VNode =
+  result = buildHtml():
+    tdiv(class = "font-sans"):
+      tdiv(id="header", class="flex flex-row pt-2"):
+        tdiv(class="font-cursive text-4xl pl-6"):
+          text "Dewdrop"
+        tdiv(class="w-8 h-8"):
+          img(src = dropSvg)
+      tdiv(id="file-container"):
+        fileListComponent()
+      tdiv(id="editor-container"):
+        editorComponent()
+      tdiv(id="lower-control-panel", class="flex"):
+        buttonComponent("Save", id = "savebtn", color = "green")
   
 setRenderer(render, cstring("root"))
-setForeignNodeId(cstring("editor-container"))
+setForeignNodeId(cstring("editor-element"))
 kxi.redrawSync()
 Editor.setupEditor()

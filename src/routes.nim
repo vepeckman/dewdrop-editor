@@ -16,10 +16,11 @@ when defined(release):
 
 template devRoutes(): untyped =
   routes:
+
     get "/api/files":
       var data = newJArray()
       for file in files:
-        data.add(file.metaData.toJs)
+        data.add(file.toJs)
       resp data
 
     get "/api/files/@id/text":
@@ -39,10 +40,11 @@ template devRoutes(): untyped =
 
 template prodRoutes(): untyped =
   routes:
+
     get "/api/files":
       var data = newJArray()
       for file in files:
-        data.add(file.metaData.toJs)
+        data.add(file.toJs)
       resp data
 
     get "/api/files/@id/text":

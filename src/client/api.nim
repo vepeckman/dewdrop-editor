@@ -1,14 +1,14 @@
 import jsffi, asyncjs, sugar
-import karax/karax
+import karax/karax, karax/kbase
 import ../common/file, fetch, editor
 
-var MetaDataStore*: seq[FileMetaData]
-var CurrentFile: FileData
+var FileDataStore*: seq[FileData]
+var CurrentFile*: FileData
 
-proc getFiles*(): Future[seq[FileMetaData]]  =
+proc getFiles*(): Future[seq[FileData]]  =
   fetch(cstring("/api/files"))
     .then((resp: JsObject) => resp.json()) 
-    .then((data: JsObject) => toFileMetaDataSeq(data))
+    .then((data: JsObject) => toFileSeq(data))
 
 proc getFile*(id: cstring): Future[FileData] =
   let fileUri = cstring("/api/files/") & id & cstring("/text");
@@ -24,17 +24,25 @@ proc saveFile*(file: FileData): Future[void] =
   fetch(fileUri, options)
     .then((resp: JsObject) => echo "ok")
 
-proc updateMetaData*() {. async, discardable .} =
-  let files = await getFiles()
-  MetaDataStore = files
+proc updateFileData*(file: FileData) {. async, discardable .} =
+  if not isNil(CurrentFile):
+    CurrentFile.text = Editor.getEditorText().to(kstring)
+  Editor.updateEditor(file)
+  CurrentFile = file
   if not isNil(kxi):
     kxi.redraw()
 
-proc updateFileData*(metaData: FileMetaData) {. async, discardable .} =
-  let file = await getFile(metaData.id)
-  Editor.updateEditor(file)
-  CurrentFile = file
+proc saveCurrentFile*(): Future[void] {. async, discardable .} = 
+  await saveFile(CurrentFile)
+  CurrentFile.unsavedChanges = false
+  if not isNil(kxi):
+    kxi.redraw()
 
-proc saveCurrentFile*(): Future[void] {. discardable .} = saveFile(CurrentFile)
+proc apiStartup() {. async, discardable .} =
+  FileDataStore = await getFiles()
+  if FileDataStore.len > 0:
+    updateFileData(FileDataStore[0])
+  if not isNil(kxi):
+    kxi.redraw()
 
-updateMetaData()
+apiStartup()

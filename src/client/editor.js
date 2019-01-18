@@ -69,7 +69,7 @@ export function setupEditor() {
         }
     }
 
-    editor = monaco.editor.create(document.getElementById('editor-container'));
+    editor = monaco.editor.create(document.getElementById('editor-element'));
 }
 
 export function updateEditor(fileData) {

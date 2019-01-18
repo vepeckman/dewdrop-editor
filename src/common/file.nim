@@ -7,53 +7,52 @@ else:
   import json, streams
 
 type
-  FileMetaData* = ref object
-    id, path: kstring
-
   FileData* = ref object
-    text, lang: kstring
-    metaData: FileMetaData
+    text, lang, id, path: kstring
+    unsavedChanges: bool
 
-proc id*(data: FileMetaData): kstring = data.id
-proc path*(data: FileMetaData): kstring = data.path
+proc ks(): kstring = kstring("")
 
-proc id*(file: FileData): kstring = file.metaData.id
-proc path*(file: FileData): kstring = file.metaData.path
-proc text*(file: FileData): kstring = file.text
-proc lang*(file: FileData): kstring = file.lang
-proc metaData*(file: FileData): FileMetaData = file.metaData
+proc id*(file: FileData): kstring = 
+  if isNil(file): ks() else: file.id
+proc path*(file: FileData): kstring = 
+  if isNil(file): ks() else: file.path
+proc text*(file: FileData): kstring = 
+  if isNil(file): ks() else: file.text
+proc `text=`*(file: FileData, text: kstring) =
+  file.text = text
+proc lang*(file: FileData): kstring = 
+  if isNil(file): ks() else: file.lang
+proc unsavedChanges*(file: FileData): bool =
+  if isNil(file): false else: file.unsavedChanges
+proc `unsavedChanges=`*(file: FileData, unsavedChanges: bool) =
+  file.unsavedChanges = unsavedChanges
 
+proc `==`(f1, f2: FileData): bool = f1.id == f2.id
 
-proc newMetaData*(path: string): FileMetaData =
-  FileMetaData(path: path, id: path.replace('/', '.'))
 
 when defined(js):
-  proc toFileMetaData*(data: JsObject): FileMetaData = 
-    FileMetaData(id: to(data.id, kstring), path: to(data.path, kstring))
-
-  proc toFileMetaDataSeq*(data: JsObject): seq[FileMetaData] =
-    for it in data.items:
-      result.add(toFileMetaData(it))
-
   proc toFileData*(data: JsObject): FileData =
     FileData(
       text: to(data.text, kstring),
       lang: to(data.lang, kstring),
-      metaData: toFileMetaData(data))
+      id: to(data.id, kstring),
+      path: to(data.path, kstring),
+      unsavedChanges: to(data.unsavedChanges, bool))
+
+  proc toFileSeq*(data: JsObject): seq[FileData] =
+    for it in data.items:
+      result.add(toFileData(it))
+
 
 else:
-  proc toJs*(data: FileMetaData): JsonNode =
-    result = %* {
-      "id": data.id,
-      "path": data.path
-    }
-  
   proc toJs*(file: FileData): JsonNode =
     result = %* {
       "text": file.text,
       "lang": file.lang,
       "id": file.id,
-      "path": file.path
+      "path": file.path,
+      "unsavedChanges": file.unsavedChanges
     }
 
   proc determineLanguage(path: string): string =
@@ -67,9 +66,11 @@ else:
 
   proc newFileData*(path: string): FileData =
     FileData(
+      path: path,
+      id: path.replace('/', '.'),
       text: readFile(path),
       lang: determineLanguage(path),
-      metaData: newMetaData(path)
+      unsavedChanges: false
     )
 
   proc saveFile*(file: FileData, text: string) =
