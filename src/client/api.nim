@@ -20,14 +20,14 @@ proc saveFile*(file: FileData): Future[void] =
   let fileUri = cstring("/api/files/") & file.id & cstring("/text");
   var options = newJsObject()
   options.`method` = cstring("PUT")
-  options.body = Editor.getEditorText()
+  options.body = getEditorText()
   fetch(fileUri, options)
     .then((resp: JsObject) => echo "ok")
 
 proc updateFileData*(file: FileData) {. async, discardable .} =
   if not isNil(CurrentFile):
-    CurrentFile.text = Editor.getEditorText().to(kstring)
-  Editor.updateEditor(file)
+    CurrentFile.text = getEditorText()
+  updateEditor(file)
   CurrentFile = file
   if not isNil(kxi):
     kxi.redraw()

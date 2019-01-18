@@ -69,4 +69,4 @@ proc render(): VNode =
 setRenderer(render, cstring("root"))
 setForeignNodeId(cstring("editor-element"))
 kxi.redrawSync()
-Editor.setupEditor()
+setupEditor()
