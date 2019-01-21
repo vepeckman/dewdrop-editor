@@ -1,19 +1,35 @@
-import jsffi, dom
+import jsffi, dom, macros
 import karax/kbase
-import ../common/file
+import ../common/file, fetch
 
+proc lazyImport(path: cstring): Future[JsObject] {. nodecl, importcpp: "import(@)" .}
 let ace = require("ace-builds/src-noconflict/ace")
-discard require("ace-builds/src-noconflict/theme-monokai")
-discard require("ace-builds/src-noconflict/mode-javascript")
 
 var editor: JsObject
 
 proc setupEditor*() =
-  ace.config.set(cstring"basePath", cstring"client")
   editor = ace.edit("editor-element")
-  editor.setTheme("ace/theme/monokai")
-  editor.session.setMode("ace/mode/javascript")
+  discard lazyImport(cstring"ace-builds/src-noconflict/theme-xcode").then(proc (module: JsObject) = editor.setTheme(cstring"ace/theme/xcode"))
   
+macro importLang(lang: static[string]): untyped =
+  result = newStmtList()
+  let promise = ident("promise")
+  let importStr = newCall(ident("cstring"), newStrLitNode("ace-builds/src-noconflict/mode-" & lang))
+  let importCall = newCall(ident("lazyImport"), importStr)
+  result.add(newLetStmt(promise, importCall))
+  result.add(quote do:
+    discard `promise`.then(proc (module: JsObject) = editor.session.setMode("ace/mode/" & `lang`))
+    )
+
+proc updateLanguage(file: FileData) =
+  case $file.lang
+  of "javascript": 
+    importLang("javascript")
+  of "yaml":
+    importLang("yaml")
+
 proc updateEditor*(file: FileData) = 
   editor.setValue(file.text, -1)
+  updateLanguage(file)
+
 proc getEditorText*(): kstring = editor.getValue().to(kstring)
